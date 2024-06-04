@@ -188,7 +188,10 @@ def linkedin_analyse(site):
     b_5_df =[]
     print('b5',b_5)
     for i in b_5:
-        trait, score = i.split(':')
+        try:
+            trait, score = i.split(':')
+        except:
+            st.error("Error parsing linkedin profile, please try again!")
         b_5_df.append((trait, float(score)))
     b_5_df = pd.DataFrame(b_5_df, columns=['traits', 'scores'])
     #b_5_plot = sns.barplot(x='scores', y='traits',data=b_5_df, ax=ax,  palette='hls', width=0.5)

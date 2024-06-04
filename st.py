@@ -5,10 +5,10 @@ from time import time
 import seaborn as sns
 import matplotlib.pyplot as plt
 st.set_page_config(
+    layout="wide",
     page_title="Linkedin Analyser",
     page_icon="🔮"
 )
-st.set_page_config(layout="wide")
 buff1, col, buff2 = st.columns([1,3,1])
 
 col.title('Linkedin Analyser App 🔮')

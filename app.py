@@ -161,8 +161,9 @@ def linkedin_analyse(site):
     Welcome to the Big Five Personality Analyzer! This tool utilizes the renowned Big Five personality traits - Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism - to analyze your personality based on your LinkedIn comments. By examining your language patterns and expressions, we'll provide you with insights into your personality traits, helping you better understand yourself and how you interact with others in a professional context.
 
     Instructions:
-    Please provide a list of comments you've made on LinkedIn. These comments will serve as the basis for our analysis. The more comments you provide, the more accurate the analysis will be. Once you've input your comments, sit back and let the Big Five Personality Analyzer do its work!
-
+    Please provide a list of comments you've made on LinkedIn. These comments will serve as the basis for our analysis. The more comments you provide, the more accurate the analysis will be. Once you've input your comments, sit back and let the Big Five Personality Analyzer do its work! 
+    Each score is out of 5.
+    
     Example Input:
     1. Great article! I completely agree with your insights.
     2. Congratulations on your new role! Wishing you all the best.
@@ -176,7 +177,6 @@ def linkedin_analyse(site):
     Extraversion:3.2
     Agreeableness:4.7
     Neuroticism:1.1
-    Each score is out of 5.
     '''}]
     for i in comments:
         messages_b5.append({'role': 'human', 'content': str(i)})

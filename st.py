@@ -4,11 +4,14 @@ import pandas as pd
 from time import time
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+st.set_page_config(
+    page_title="Linkedin Analyser",
+    page_icon="🔮"
+)
 st.set_page_config(layout="wide")
 buff1, col, buff2 = st.columns([1,3,1])
 
-col.title('Linkedin Apalyser App')
+col.title('Linkedin Analyser App 🔮')
 site = col.text_input("Enter website: ").rstrip('/')+'/'
 col1,col2,col3, col4 = col.columns(4)
 

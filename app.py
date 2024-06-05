@@ -18,7 +18,8 @@ def linkedin_analyse(site):
     name = site.rstrip('/').split('/')[-1]
     headers = {
 	#"X-RapidAPI-Key": "c3ed23db4emsh5054084058e4e2dp1a1780jsnaf404d8468f6",
-    "X-RapidAPI-Key": "dacc93bfecmsh336023176beccabp1fa929jsnbf31d1fec909",
+    #"X-RapidAPI-Key": "dacc93bfecmsh336023176beccabp1fa929jsnbf31d1fec909",
+    "X-RapidAPI-Key": "09d61ce8a3msh24d4486b9ca172fp1976bajsn4db23774373a",
 	"X-RapidAPI-Host": "linkedin-data-api.p.rapidapi.com"    }
     profile_url = "https://linkedin-data-api.p.rapidapi.com/"
     posts_url = "https://linkedin-data-api.p.rapidapi.com/get-profile-posts"
@@ -35,11 +36,17 @@ def linkedin_analyse(site):
     data_posts['postedDateTime'] = data_posts['postedDateTimestamp'].apply(lambda x: datetime.fromtimestamp(x/1000.0))
     last_30  = datetime.now() - timedelta(days=30)
     #print('{posts} posts made in last 30 days'.format(posts= len(data_posts.loc[data_posts['postedDateTime'] >= last_30])))
-    num_posts= len(data_posts.loc[data_posts['postedDateTime'] >= last_30])
+    try:
+        num_posts= len(data_posts.loc[data_posts['postedDateTime'] >= last_30])
+    except:
+        num_posts =0
     #print('Last post made at {last_time}'.format(last_time = data_posts.loc[0]['postedDateTime'].strftime("%d/%m/%Y, %H:%M")))
     last_post = data_posts.loc[0]['postedDateTime'].strftime("%d/%m/%Y, %H:%M")
     data_comments['postedDaysAgo'] = data_comments['postedAt'].apply(lambda x: to_nodays(x))
-    num_comments= len(data_comments.loc[data_comments['postedDaysAgo'] <= 30])
+    try:
+        num_comments= len(data_comments.loc[data_comments['postedDaysAgo'] <= 30])
+    except:
+        num_comments =0
     last_comment = data_comments.loc[0]['postedAt']
 
 
@@ -136,23 +143,50 @@ def linkedin_analyse(site):
         location = data_profile['geo']['full']
     except:
         pass
+    try:
+        med_react_count= data_posts['totalReactionCount'].median()
+    except:
+        med_react_count = 'unavailable'
+    try:
+        med_repost_count=data_posts['repostsCount'].median()
+    except:
+        med_repost_count = 'unavailable'
+    try:
+        med_comment_count=data_posts['commentsCount'].median()
+    except:
+        med_comment_count = 'unavailable'
+    try:
+        med_comment_react_count= data_comments['totalReactionCount'].median()
+    except:
+        med_comment_react_count = 'unavailable'
+    try:
+        spost = len(data_posts)- data_posts['reposted'].value_counts().to_dict()[True]
+    except:
+        spost = len(data_posts)
+    try:
+        rposts= data_posts['reposted'].value_counts().to_dict()[True]
+    except:
+        rposts = 0
     html = html.format(image = data_profile['profilePicture'], 
                        location= location, 
                        headline= headline, 
                        languages= languages,
                        #avg_post_len= round(data_posts['text'].apply(lambda x: len(x.split(' '))).sum()/len(data_posts['text']), 1), 
-                       med_react_count= data_posts['totalReactionCount'].median(),
-                       med_repost_count=data_posts['repostsCount'].median(),
-                       med_comment_count=data_posts['commentsCount'].median(),
+                       med_react_count= med_react_count,
+                       med_repost_count=med_repost_count,
+                       med_comment_count=med_comment_count,
                        #avg_comment_len= round(data_comments['text'].apply(lambda x: len(x.split(' '))).sum()/len(data_comments['text']), 1),
-                       med_comment_react_count= data_comments['totalReactionCount'].median(),
+                       med_comment_react_count= med_comment_react_count,
                        education = education,
                        fname=data_profile['firstName'], lname=data_profile['lastName'],
-                       spost = len(data_posts)- data_posts['reposted'].value_counts().to_dict()[True], rposts= data_posts['reposted'].value_counts().to_dict()[True],
+                       spost = spost, rposts= rposts,
                        num_posts=num_posts, last_post=last_post, num_comments=num_comments, last_comment=last_comment
                        )
     
-    endorsed_skills = pd.DataFrame(data_profile['skills'])
+    try:
+        endorsed_skills = pd.DataFrame(data_profile['skills'])
+    except:
+        endorsed_skills =pd.DataFrame()
 
 
     comments = data_comments['text'].to_list()
@@ -255,20 +289,20 @@ Output json content>
     bins = json.loads(llm.invoke(message_schedule_class).content.replace('\n', ''))
     print('BINS', bins['bins'])
     message_schedule_classify = '''
-    You are an assistant which is given input a list of first 200 characters of 10 linkedin posts. You are also provided 5 different bins. Classify each post by assigning a bin which is most applicable to the post. Return  classifed posts separated by ','         
+    You are an assistant which is given input of first 200 characters of a linkedin post. You are also provided 5 different bins. Classify the post by assigning a bin which is most applicable to the post. Return  classifed post  as the bin name    
 
     Bins: {bins}   
-    Posts: {posts}
-    Output format:<Bin of Post1>,<Bin of Post2>,<Bin of Post3>,<Bin of Post4>,<Bin of Post5>,<Bin of Post6>,<Bin of Post7>,<Bin of Post8>,<Bin of Post9>,<Bin of Post10>'''
+    Post: {posts}
+    Output format:<Bin of Post>'''
     chain  = RunnableLambda(lambda x: message_schedule_classify.format(bins=x['bins'], posts=x['posts'])) | llm
     class_list =[]
-    for i in range(5):
+    for i in range(len(posts_200c)):
         p = chain.invoke({
             'bins':bins['bins'],
-            'posts':posts_200c[i*10:(i+1)*10]
+            'posts':posts_200c[i]
         }).content
-        print('*', p.split(','))
-        class_list += p.split(',')
+        print('*', p)
+        class_list.append(p)
     print('CLASSLIST', len(class_list))
     data_posts['dyn_class'] = class_list
 
@@ -355,7 +389,21 @@ def htmlfy(lis, site, mail='user@example.com', desc_as_summ=False):
             if i['reposted'] == True:
                 is_reposted = 'Reposted'
                 color='moccasin'
-
+            reactions = 0
+            try:
+                reactions = i['totalReactionCount']
+            except:
+                pass
+            comments =0
+            try:
+                comments = i['commentsCount']
+            except:
+                pass
+            reposts = 0
+            try:
+                reposts = i['repostsCount']
+            except:
+                pass
             container = '''
             <br>
             <div style='border-style: solid;    border-width: medium;    border-color: gainsboro;    border-radius: 10px;    padding: 10px; font-size: medium;'>
@@ -370,7 +418,7 @@ def htmlfy(lis, site, mail='user@example.com', desc_as_summ=False):
                 container = container + '<img src="{image}"  style="display: block;     margin: auto;   width: 50%;     border-color: gainsboro;    border-radius: 0px;"> '
                 image = i['image'][0]['url']
             html = html + container + '</div>'
-            html = html.format(email=mail, site=site, post=i['text'], time=time, reactions=i['totalReactionCount'], comments=i['commentsCount'], reposts=i['repostsCount'], image=image, postUrl=i['postUrl'], is_reposted=is_reposted, color=color)
+            html = html.format(email=mail, site=site, post=i['text'], time=time, reactions=reactions, comments=comments, reposts=reposts, image=image, postUrl=i['postUrl'], is_reposted=is_reposted, color=color)
         html = html + '''<br>
         <h5>Regards<br>
         rava.ai</h5></div>'''

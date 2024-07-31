@@ -12,18 +12,20 @@ import matplotlib.pyplot as plt
 import requests
 
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+os.environ["RAPID_API_KEY"] = st.secrets["RAPID_API_KEY"]
 llm  = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0.2)
 
 def linkedin_analyse(site):
     name = site.rstrip('/').split('/')[-1]
     headers = {
-	"X-RapidAPI-Key": "c3ed23db4emsh5054084058e4e2dp1a1780jsnaf404d8468f6",
+	"X-RapidAPI-Key": os.environ["RAPID_API_KEY"],
+	#"X-RapidAPI-Key": "c3ed23db4emsh5054084058e4e2dp1a1780jsnaf404d8468f6",
     #"X-RapidAPI-Key": "dacc93bfecmsh336023176beccabp1fa929jsnbf31d1fec909",
     #"X-RapidAPI-Key": "b3017e0b80mshd58e6b2078fd8edp1f1433jsnd946152af897",
-	"X-RapidAPI-Host": "linkedin-data-api.p.rapidapi.com"    }
-    profile_url = "https://linkedin-data-api.p.rapidapi.com/"
-    posts_url = "https://linkedin-data-api.p.rapidapi.com/get-profile-posts"
-    comments_url = "https://linkedin-data-api.p.rapidapi.com/get-profile-comments"
+	"x-rapidapi-host": "linkedin-api8.p.rapidapi.com"    }
+    profile_url = "https://linkedin-api8.p.rapidapi.com/"
+    posts_url = "https://linkedin-api8.p.rapidapi.com/get-profile-posts"
+    comments_url = "https://linkedin-api8.p.rapidapi.com/get-profile-comments"
     r_posts = requests.get(posts_url, params= {"username":name}, headers=headers)
     r_profile = requests.get(profile_url, params ={"username":name}, headers=headers)
     r_comments = requests.get(comments_url, params ={"username":name}, headers=headers)
